@@ -1,103 +1,117 @@
-import Image from "next/image";
+import Hero from "@/components/home/Hero";
+import HomeContent from "@/components/home/HomeContent";
 
-export default function Home() {
+export const metadata = {
+  title: "Buy It Now - Votre boutique en ligne de confiance",
+  description:
+    "Découvrez des milliers de produits de qualité à des prix imbattables. Livraison rapide et paiement sécurisé.",
+};
+
+/**
+ * Récupère les données de la page d'accueil depuis l'API
+ * Version optimisée avec cache long (les données changent rarement)
+ *
+ * @returns {Promise<Object>} Données de la homepage avec sections ou valeurs par défaut
+ */
+const getHomePageData = async () => {
+  try {
+    // 1. Construire l'URL de l'API
+    const apiUrl = `${
+      process.env.API_URL || "https://bs-start-client.vercel.app"
+    }/api/homepage`;
+
+    console.log("Fetching homepage data from:", apiUrl);
+
+    // 2. Faire l'appel API avec timeout (5 secondes)
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+    const res = await fetch(apiUrl, {
+      signal: controller.signal,
+      next: {
+        revalidate: 3600, // Cache Next.js de 1 heure (données rarement modifiées)
+        tags: ["homepage"],
+      },
+    });
+
+    clearTimeout(timeoutId);
+
+    // 3. Vérifier le statut HTTP
+    if (!res.ok) {
+      console.error(`API Error: ${res.status} - ${res.statusText}`);
+
+      // Retourner des valeurs par défaut en cas d'erreur
+      return {
+        success: false,
+        message: "Erreur lors de la récupération des données",
+        data: {
+          sections: [],
+        },
+      };
+    }
+
+    // 4. Parser la réponse JSON
+    const responseBody = await res.json();
+
+    // 5. Vérifier la structure de la réponse
+    if (!responseBody.success) {
+      console.error("Invalid API response structure:", responseBody);
+      return {
+        success: false,
+        message: responseBody.message || "Réponse API invalide",
+        data: {
+          sections: [],
+        },
+      };
+    }
+
+    // 6. Retourner les données avec succès
+    return {
+      success: true,
+      message: "Données récupérées avec succès",
+      data: responseBody.data,
+      meta: responseBody.meta,
+    };
+  } catch (error) {
+    // 7. Gestion des erreurs réseau/timeout
+    if (error.name === "AbortError") {
+      console.error("Request timeout after 5 seconds");
+      return {
+        success: false,
+        message: "La requête a pris trop de temps",
+        data: {
+          sections: [],
+        },
+      };
+    }
+
+    console.error("Network error:", error.message);
+    return {
+      success: false,
+      message: "Problème de connexion réseau",
+      data: {
+        sections: [],
+      },
+    };
+  }
+};
+
+export default async function Home() {
+  // Récupérer les données de la homepage
+  const homePageData = await getHomePageData();
+
+  // Log pour le débogage (seulement en développement)
+  if (process.env.NODE_ENV === "development") {
+    console.log(
+      "HomePage sections count:",
+      homePageData.data?.sections?.length || 0,
+    );
+  }
+
   return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              app/page.js
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+    <>
+      <Hero homePageData={homePageData.data} />
+      <HomeContent />
+    </>
   );
 }
