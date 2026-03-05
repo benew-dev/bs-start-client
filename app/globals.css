@@ -1,26 +1,279 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* ============================================
+   🎨 CONFIGURATION DU THÈME SUNSET VIBES
+   Version Équilibrée et Professionnelle
+   ============================================ */
+
+@theme {
+  /* ========== COULEURS DE BASE ========== */
+  --color-gray-50: #f9fafb;
+  --color-gray-100: #f3f4f6;
+  --color-gray-200: #e5e7eb;
+  --color-gray-300: #d1d5db;
+  --color-gray-400: #9ca3af;
+  --color-gray-500: #6b7280;
+  --color-gray-600: #4b5563;
+  --color-gray-700: #374151;
+  --color-gray-800: #1f2937;
+  --color-gray-900: #111827;
+
+  /* ========== PALETTE SUNSET - ORANGE ========== */
+  --color-orange-50: #fff7ed;
+  --color-orange-100: #ffedd5;
+  --color-orange-200: #fed7aa;
+  --color-orange-300: #fdba74;
+  --color-orange-400: #fb923c;
+  --color-orange-500: #f97316;
+  --color-orange-600: #ea580c;
+  --color-orange-700: #c2410c;
+  --color-orange-800: #9a3412;
+  --color-orange-900: #7c2d12;
+
+  /* ========== PALETTE SUNSET - ROSE/PINK ========== */
+  --color-pink-50: #fdf2f8;
+  --color-pink-100: #fce7f3;
+  --color-pink-200: #fbcfe8;
+  --color-pink-300: #f9a8d4;
+  --color-pink-400: #f472b6;
+  --color-pink-500: #ec4899;
+  --color-pink-600: #db2777;
+  --color-pink-700: #be185d;
+  --color-pink-800: #9f1239;
+  --color-pink-900: #831843;
+
+  /* ========== PALETTE SUNSET - VIOLET/PURPLE ========== */
+  --color-purple-50: #faf5ff;
+  --color-purple-100: #f3e8ff;
+  --color-purple-200: #e9d5ff;
+  --color-purple-300: #d8b4fe;
+  --color-purple-400: #c084fc;
+  --color-purple-500: #a855f7;
+  --color-purple-600: #9333ea;
+  --color-purple-700: #7e22ce;
+  --color-purple-800: #6b21a8;
+  --color-purple-900: #581c87;
+
+  /* ========== COULEURS SYSTÈME ========== */
+  --color-red-50: #fef2f2;
+  --color-red-100: #fee2e2;
+  --color-red-500: #ef4444;
+  --color-red-600: #dc2626;
+
+  --color-green-50: #f0fdf4;
+  --color-green-100: #dcfce7;
+  --color-green-500: #22c55e;
+  --color-green-600: #16a34a;
+
+  --color-yellow-50: #fefce8;
+  --color-yellow-100: #fef3c7;
+  --color-yellow-500: #eab308;
+
+  --color-white: #ffffff;
+  --color-black: #000000;
+
+  /* ========== BREAKPOINTS STANDARDS ========== */
+  --breakpoint-sm: 40rem;
+  --breakpoint-md: 48rem;
+  --breakpoint-lg: 64rem;
+  --breakpoint-xl: 80rem;
+  --breakpoint-2xl: 96rem;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+/* ============================================
+   📐 STYLES DE BASE
+   ============================================ */
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentColor);
+  }
+
+  /* Background simple et clair */
+  body {
+    background: #ffffff;
+    color: var(--color-gray-900);
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* ============================================
+   🎯 UTILITIES PERSONNALISÉES
+   Approche Minimaliste et Équilibrée
+   ============================================ */
+
+@layer utilities {
+  /* ========== GRADIENT PRINCIPAL (CTA uniquement) ========== */
+  .bg-gradient-sunset {
+    background: linear-gradient(135deg, #f97316 0%, #ec4899 50%, #a855f7 100%);
+  }
+
+  .bg-gradient-sunset-hover:hover {
+    background: linear-gradient(135deg, #ea580c 0%, #db2777 50%, #9333ea 100%);
+  }
+
+  /* ========== BACKGROUNDS SUBTILS (Sections) ========== */
+  .bg-sunset-light {
+    background: linear-gradient(135deg, #fff7ed 0%, #fdf2f8 100%);
+  }
+
+  .bg-sunset-soft {
+    background: linear-gradient(to right, #fff7ed, #ffffff, #fdf2f8);
+  }
+
+  /* ========== TEXT ACCENTS (Titres uniquement) ========== */
+  .text-sunset {
+    color: #f97316;
+  }
+
+  .text-gradient-sunset {
+    background: linear-gradient(135deg, #f97316 0%, #ec4899 70%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  /* ========== BORDERS SUBTILES ========== */
+  .border-sunset {
+    border-color: #fed7aa;
+  }
+
+  .border-sunset-accent {
+    border-color: #f97316;
+  }
+
+  /* ========== SHADOWS ÉLÉGANTES ========== */
+  .shadow-sunset {
+    box-shadow:
+      0 4px 6px -1px rgba(249, 115, 22, 0.1),
+      0 2px 4px -1px rgba(236, 72, 153, 0.06);
+  }
+
+  .shadow-sunset-md {
+    box-shadow:
+      0 10px 15px -3px rgba(249, 115, 22, 0.1),
+      0 4px 6px -2px rgba(236, 72, 153, 0.05);
+  }
+
+  .shadow-sunset-lg {
+    box-shadow:
+      0 20px 25px -5px rgba(249, 115, 22, 0.1),
+      0 10px 10px -5px rgba(236, 72, 153, 0.04);
+  }
+
+  /* ========== HOVER EFFECTS ========== */
+  .hover-lift {
+    transition: all 0.3s ease;
+  }
+
+  .hover-lift:hover {
+    transform: translateY(-2px);
+  }
+
+  /* ========== ACCENT COLORS (Pour petits éléments) ========== */
+  .accent-orange {
+    color: #f97316;
+  }
+
+  .accent-pink {
+    color: #ec4899;
+  }
+
+  .accent-purple {
+    color: #a855f7;
+  }
+
+  /* ========== RINGS DE FOCUS (Accessibilité) ========== */
+  .ring-sunset {
+    --tw-ring-color: rgba(249, 115, 22, 0.5);
+  }
+
+  /* ========== ANIMATIONS SUBTILES ========== */
+  .pulse-subtle {
+    animation: pulse-subtle 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  @keyframes pulse-subtle {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.85;
+    }
+  }
+}
+
+/* ============================================
+   ♿ ACCESSIBILITÉ
+   ============================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ============================================
+   📱 SCROLLBAR STYLISÉE (Mobile)
+   ============================================ */
+
+@media (max-width: 640px) {
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
+/* ============================================
+   📦 CONTAINER UTILITY
+   ============================================ */
+
+@utility container {
+  width: 100%;
+  margin-right: auto;
+  margin-left: auto;
+  padding-right: 1rem;
+  padding-left: 1rem;
+}
+
+@media (min-width: 640px) {
+  .container {
+    max-width: 640px;
+  }
+}
+
+@media (min-width: 768px) {
+  .container {
+    max-width: 768px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .container {
+    max-width: 1024px;
+  }
+}
+
+@media (min-width: 1280px) {
+  .container {
+    max-width: 1280px;
+  }
+}
+
+@media (min-width: 1536px) {
+  .container {
+    max-width: 1536px;
+  }
 }
