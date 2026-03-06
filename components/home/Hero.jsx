@@ -7,6 +7,7 @@ import { CldImage } from "next-cloudinary";
 import { useSwipeable } from "react-swipeable";
 
 const Hero = ({ homePageData }) => {
+  console.log("Home page", homePageData);
   // États pour le carrousel
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isAutoScrolling, setIsAutoScrolling] = useState(true);
