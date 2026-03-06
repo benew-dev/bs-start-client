@@ -108,6 +108,8 @@ export default async function Home() {
     );
   }
 
+  console.log("Home page data", homePageData.data);
+
   return (
     <>
       <Hero homePageData={homePageData.data} />
