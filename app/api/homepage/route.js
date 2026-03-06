@@ -29,7 +29,6 @@ import { withIntelligentRateLimit } from "@/utils/rateLimit";
 export const GET = withIntelligentRateLimit(
   async function (req) {
     try {
-      console.log("We are in the homepage API route");
       // Connexion DB
       await dbConnect();
 
@@ -39,15 +38,11 @@ export const GET = withIntelligentRateLimit(
         .sort({ createdAt: -1 })
         .lean();
 
-      console.log("Getting homepage from db");
-      console.log(homePage);
-
       // Si aucune page d'accueil n'existe
       if (!homePage) {
-        console.log("No Home page found");
         return NextResponse.json(
           {
-            success: false,
+            success: true,
             message: "No homepage configured",
             data: {
               sections: [],
@@ -58,7 +53,7 @@ export const GET = withIntelligentRateLimit(
               sectionsCount: 0,
             },
           },
-          { status: 404 },
+          { status: 200 },
         );
       }
 
@@ -73,16 +68,10 @@ export const GET = withIntelligentRateLimit(
         },
       }));
 
-      console.log("Formatting homepage sections");
-      console.log(formattedSections);
-
       // Préparer la réponse
       const responseData = {
         sections: formattedSections,
       };
-
-      console.log("Adding homepage to responseData");
-      console.log(responseData);
 
       // Calculer un hash simple pour l'ETag (optionnel)
       const dataHash = Buffer.from(JSON.stringify(responseData))
