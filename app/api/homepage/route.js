@@ -29,6 +29,7 @@ import { withIntelligentRateLimit } from "@/utils/rateLimit";
 export const GET = withIntelligentRateLimit(
   async function (req) {
     try {
+      console.log("We are in the homepage API route");
       // Connexion DB
       await dbConnect();
 
