@@ -44,6 +44,7 @@ export const GET = withIntelligentRateLimit(
 
       // Si aucune page d'accueil n'existe
       if (!homePage) {
+        console.log("No Home page found");
         return NextResponse.json(
           {
             success: true,
