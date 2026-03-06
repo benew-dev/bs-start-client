@@ -34,10 +34,10 @@ export const GET = withIntelligentRateLimit(
       await dbConnect();
 
       // Récupérer la page d'accueil (prendre la plus récente)
-      const homePage = await HomePage.findOne()
-        .select("sections")
-        .sort({ createdAt: -1 })
-        .lean();
+      const homePage = await HomePage.findOne();
+      // .select("sections")
+      // .sort({ createdAt: -1 })
+      // .lean();
 
       console.log("Getting homepage from db");
       console.log(homePage);
