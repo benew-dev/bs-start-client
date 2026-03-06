@@ -47,7 +47,7 @@ export const GET = withIntelligentRateLimit(
         console.log("No Home page found");
         return NextResponse.json(
           {
-            success: true,
+            success: false,
             message: "No homepage configured",
             data: {
               sections: [],
@@ -58,7 +58,7 @@ export const GET = withIntelligentRateLimit(
               sectionsCount: 0,
             },
           },
-          { status: 200 },
+          { status: 404 },
         );
       }
 
