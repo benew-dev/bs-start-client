@@ -38,6 +38,9 @@ export const GET = withIntelligentRateLimit(
         .sort({ createdAt: -1 })
         .lean();
 
+      console.log("Getting homepage from db");
+      console.log(homePage);
+
       // Si aucune page d'accueil n'existe
       if (!homePage) {
         return NextResponse.json(
@@ -68,10 +71,16 @@ export const GET = withIntelligentRateLimit(
         },
       }));
 
+      console.log("Formatting homepage sections");
+      console.log(formattedSections);
+
       // Préparer la réponse
       const responseData = {
         sections: formattedSections,
       };
+
+      console.log("Adding homepage to responseData");
+      console.log(responseData);
 
       // Calculer un hash simple pour l'ETag (optionnel)
       const dataHash = Buffer.from(JSON.stringify(responseData))

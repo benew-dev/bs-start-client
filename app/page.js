@@ -99,6 +99,7 @@ const getHomePageData = async () => {
 export default async function Home() {
   // Récupérer les données de la homepage
   const homePageData = await getHomePageData();
+  console.log("Home page data", homePageData.data);
 
   // Log pour le débogage (seulement en développement)
   if (process.env.NODE_ENV === "development") {
@@ -107,8 +108,6 @@ export default async function Home() {
       homePageData.data?.sections?.length || 0,
     );
   }
-
-  console.log("Home page data", homePageData.data);
 
   return (
     <>
