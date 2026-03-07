@@ -14,104 +14,88 @@ export const metadata = {
  * @returns {Promise<Object>} Données de la homepage avec sections ou valeurs par défaut
  */
 const getHomePageData = async () => {
+  const empty = {
+    sections: [],
+    featuredSection: null,
+    categoriesSection: null,
+    newArrivalsSection: null,
+    advantagesSection: null,
+    testimonialsSection: null,
+    ctaSection: null,
+  };
+
   try {
-    // 1. Construire l'URL de l'API
     const apiUrl = `${
       process.env.API_URL || "https://bs-start-client.vercel.app"
     }/api/homepage`;
 
-    console.log("Fetching homepage data from:", apiUrl);
-
-    // 2. Faire l'appel API avec timeout (5 secondes)
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 5000);
 
     const res = await fetch(apiUrl, {
       signal: controller.signal,
       next: {
-        revalidate: 3600, // Cache Next.js de 1 heure (données rarement modifiées)
+        revalidate: 3600, // Cache Next.js de 1h
         tags: ["homepage"],
       },
     });
 
     clearTimeout(timeoutId);
 
-    // 3. Vérifier le statut HTTP
     if (!res.ok) {
-      console.error(`API Error: ${res.status} - ${res.statusText}`);
-
-      // Retourner des valeurs par défaut en cas d'erreur
-      return {
-        success: false,
-        message: "Erreur lors de la récupération des données",
-        data: {
-          sections: [],
-        },
-      };
+      console.error(`HomePage API error: ${res.status} ${res.statusText}`);
+      return empty;
     }
 
-    // 4. Parser la réponse JSON
-    const responseBody = await res.json();
+    const body = await res.json();
 
-    // 5. Vérifier la structure de la réponse
-    if (!responseBody.success) {
-      console.error("Invalid API response structure:", responseBody);
-      return {
-        success: false,
-        message: responseBody.message || "Réponse API invalide",
-        data: {
-          sections: [],
-        },
-      };
+    if (!body.success || !body.data) {
+      console.error("HomePage API invalid response:", body);
+      return empty;
     }
 
-    // 6. Retourner les données avec succès
+    // Normaliser : garantir que chaque clé existe
     return {
-      success: true,
-      message: "Données récupérées avec succès",
-      data: responseBody.data,
-      meta: responseBody.meta,
+      sections: body.data.sections ?? [],
+      featuredSection: body.data.featuredSection ?? null,
+      categoriesSection: body.data.categoriesSection ?? null,
+      newArrivalsSection: body.data.newArrivalsSection ?? null,
+      advantagesSection: body.data.advantagesSection ?? null,
+      testimonialsSection: body.data.testimonialsSection ?? null,
+      ctaSection: body.data.ctaSection ?? null,
     };
   } catch (error) {
-    // 7. Gestion des erreurs réseau/timeout
     if (error.name === "AbortError") {
-      console.error("Request timeout after 5 seconds");
-      return {
-        success: false,
-        message: "La requête a pris trop de temps",
-        data: {
-          sections: [],
-        },
-      };
+      console.error("HomePage API timeout (5s)");
+    } else {
+      console.error("HomePage API network error:", error.message);
     }
-
-    console.error("Network error:", error.message);
-    return {
-      success: false,
-      message: "Problème de connexion réseau",
-      data: {
-        sections: [],
-      },
-    };
+    return empty;
   }
 };
 
 export default async function Home() {
-  // Récupérer les données de la homepage
   const homePageData = await getHomePageData();
 
-  // Log pour le débogage (seulement en développement)
   if (process.env.NODE_ENV === "development") {
-    console.log(
-      "HomePage sections count:",
-      homePageData.data?.sections?.length || 0,
-    );
+    console.log("HomePage data fetched:", {
+      heroSlides: homePageData.sections.length,
+      featured: !!homePageData.featuredSection,
+      categories: !!homePageData.categoriesSection,
+      newArrivals: !!homePageData.newArrivalsSection,
+      advantages: !!homePageData.advantagesSection,
+      testimonials: !!homePageData.testimonialsSection,
+      cta: !!homePageData.ctaSection,
+    });
   }
 
   return (
     <>
-      <Hero homePageData={homePageData.data} />
-      <HomeContent />
+      {/* Hero carousel — lit homePageData.sections */}
+      <Hero homePageData={homePageData} />
+
+      {/* Contenu dynamique — lit toutes les autres sections */}
+      <HomeContent homePageData={homePageData} />
     </>
   );
 }
