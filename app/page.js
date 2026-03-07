@@ -54,9 +54,6 @@ const getHomePageData = async () => {
       return empty;
     }
 
-    console.log("Checking if all details are brought");
-    console.log(body.data);
-
     // Normaliser : garantir que chaque clé existe
     return {
       sections: body.data.sections ?? [],
