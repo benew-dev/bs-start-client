@@ -20,6 +20,31 @@ import CartSummary from "./components/CartSummary";
 import useCartOperations from "../../hooks/useCartOperations"; // ✅ Hook avec monitoring intégré
 import CartSkeleton from "../skeletons/CartSkeleton";
 
+// Bandeau affiché aux utilisateurs non connectés au-dessus du récap
+const GuestCartBanner = memo(() => (
+  <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+    <div>
+      <p className="font-medium text-blue-900">
+        Vous naviguez en tant qu&apos;invité
+      </p>
+      <p className="text-sm text-blue-700 mt-0.5">
+        Votre panier est sauvegardé sur cet appareil. Connectez-vous pour
+        finaliser votre commande et retrouver votre panier sur tous vos
+        appareils.
+      </p>
+    </div>
+    <Link
+      href="/login"
+      className="shrink-0 inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+    >
+      <LogIn className="w-4 h-4" />
+      Se connecter
+    </Link>
+  </div>
+));
+
+GuestCartBanner.displayName = "GuestCartBanner";
+
 const Cart = () => {
   const {
     loading,
@@ -29,6 +54,8 @@ const Cart = () => {
     cartTotal,
     error,
     clearError,
+    isAuthenticated,
+    enrichGuestCart,
   } = useContext(CartContext);
 
   const [initialLoadComplete, setInitialLoadComplete] = useState(false);
@@ -64,7 +91,14 @@ const Cart = () => {
 
       try {
         isLoadingCart.current = true;
-        await setCartToState();
+
+        if (isAuthenticated) {
+          // Utilisateur connecté : charger depuis la BDD (comportement original)
+          await setCartToState();
+        } else {
+          // Utilisateur guest : enrichir le localStorage avec les données produits
+          await enrichGuestCart();
+        }
       } catch (error) {
         console.error("Erreur lors du chargement du panier:", error);
         // ❌ SUPPRIMÉ : Plus de captureException ici (géré par CartContext)
@@ -100,8 +134,15 @@ const Cart = () => {
       {/* Contenu du panier */}
       <section className="py-8 md:py-10">
         <div className="container max-w-6xl mx-auto px-4">
+          {/* Bandeau guest au-dessus du contenu */}
+          {!isAuthenticated && cart?.length > 0 && <GuestCartBanner />}
+
           {!loading && cart?.length === 0 ? (
-            <EmptyCart />
+            <>
+              {/* Panier vide : montrer quand même le bandeau si guest */}
+              {!isAuthenticated && <GuestCartBanner />}
+              <EmptyCart />
+            </>
           ) : (
             <div className="flex flex-col md:flex-row gap-6">
               {/* Liste des articles */}
@@ -117,7 +158,11 @@ const Cart = () => {
 
               {/* Résumé du panier */}
               {cart?.length > 0 && (
-                <CartSummary cartItems={cart} amount={cartTotal} />
+                <CartSummary
+                  cartItems={cart}
+                  amount={cartTotal}
+                  isAuthenticated={isAuthenticated}
+                />
               )}
             </div>
           )}

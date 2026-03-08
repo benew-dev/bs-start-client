@@ -4,7 +4,10 @@ import { memo } from "react";
 import Link from "next/link";
 import { formatPrice } from "@/helpers/helpers";
 
-const CartSummary = memo(({ cartItems, amount }) => {
+// CartSummary reçoit maintenant isAuthenticated pour adapter le CTA paiement.
+// Pour les guests : le bouton "Paiement" est remplacé par un CTA connexion.
+
+const CartSummary = memo(({ cartItems, amount, isAuthenticated = true }) => {
   const totalUnits = cartItems.reduce((acc, item) => acc + item?.quantity, 0);
 
   return (
@@ -32,13 +35,24 @@ const CartSummary = memo(({ cartItems, amount }) => {
         </ul>
 
         <div className="space-y-3">
-          <Link
-            href="/payment"
-            className="px-4 py-3 inline-block text-sm font-medium w-full text-center text-white bg-blue-600 border border-transparent rounded-lg hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 shadow-sm"
-            title="Continuer vers la livraison"
-          >
-            Continuer vers le paiement
-          </Link>
+          {isAuthenticated ? (
+            <Link
+              href="/payment"
+              className="px-4 py-3 inline-block text-sm font-medium w-full text-center text-white bg-blue-600 border border-transparent rounded-lg hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 shadow-sm"
+              title="Continuer vers le paiement"
+            >
+              Continuer vers le paiement
+            </Link>
+          ) : (
+            // Guest : inviter à se connecter pour accéder au paiement
+            <Link
+              href="/login"
+              className="px-4 py-3 inline-block text-sm font-medium w-full text-center text-white bg-blue-600 border border-transparent rounded-lg hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 shadow-sm"
+              title="Se connecter pour payer"
+            >
+              Se connecter pour payer
+            </Link>
+          )}
 
           <Link
             href="/"

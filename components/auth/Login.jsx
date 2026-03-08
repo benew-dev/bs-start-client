@@ -10,6 +10,7 @@ import { parseCallbackUrl } from "@/helpers/helpers";
 import { validateLogin } from "@/helpers/validation/schemas/auth";
 import { LoaderCircle } from "lucide-react";
 import { captureException } from "@/monitoring/sentry";
+import CartContext from "@/context/CartContext";
 
 const Login = ({ csrfToken }) => {
   // États du formulaire
@@ -22,6 +23,9 @@ const Login = ({ csrfToken }) => {
   const router = useRouter();
   const params = useSearchParams();
   const callBackUrl = params.get("callbackUrl");
+
+  // ── Seul ajout par rapport à l'original ─────────────────────────
+  const { mergeGuestCartOnLogin } = useContext(CartContext);
 
   // Vérifier l'état de la connexion
   useEffect(() => {
@@ -131,6 +135,15 @@ const Login = ({ csrfToken }) => {
         });
       } else if (data?.ok) {
         toast.success("Connexion réussie!");
+
+        // ── Fusion du panier guest → BDD avant la navigation ────────
+        // On ne bloque pas en cas d'échec : l'utilisateur est connecté,
+        // c'est l'essentiel. Les toasts de fusion sont gérés dans mergeGuestCartOnLogin.
+        try {
+          await mergeGuestCartOnLogin();
+        } catch (mergeError) {
+          console.warn("[Login] Guest cart merge failed:", mergeError.message);
+        }
 
         // Rafraîchir les données du router
         router.refresh();

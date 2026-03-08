@@ -1,6 +1,4 @@
 import { Suspense, lazy } from "react";
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
 import { captureException } from "@/monitoring/sentry";
 import CartSkeleton from "@/components/skeletons/CartSkeleton";
 
@@ -31,18 +29,6 @@ export const metadata = {
 };
 
 const CartPage = async () => {
-  const cookie = await cookies();
-  // Vérification de l'authentification côté serveur
-  const sessionCookie =
-    cookie.get("next-auth.session-token") ||
-    cookie.get("__Secure-next-auth.session-token");
-
-  if (!sessionCookie) {
-    // Rediriger vers la page de connexion avec le retour à la page du panier
-    console.log("Session pas encore a jour");
-    redirect("/login");
-  }
-
   try {
     return (
       <div itemScope itemType="https://schema.org/ItemList">
