@@ -6,6 +6,8 @@ import { toast } from "react-toastify";
 import { CheckCircle, LoaderCircle } from "lucide-react";
 import AuthContext from "@/context/AuthContext";
 import CartContext from "@/context/CartContext";
+import { signIn } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 const Register = () => {
   // Contexte d'authentification
@@ -32,6 +34,8 @@ const Register = () => {
   const [registrationSuccess, setRegistrationSuccess] = useState(false);
   const [registrationData, setRegistrationData] = useState(null);
   const formRef = useRef(null);
+
+  const router = useRouter();
 
   // Détection de l'état de la connexion internet
   useEffect(() => {
