@@ -5,6 +5,7 @@ import Link from "next/link";
 import { toast } from "react-toastify";
 import { CheckCircle, LoaderCircle } from "lucide-react";
 import AuthContext from "@/context/AuthContext";
+import CartContext from "@/context/CartContext";
 
 const Register = () => {
   // Contexte d'authentification
@@ -13,6 +14,9 @@ const Register = () => {
     clearErrors,
     loading: contextLoading,
   } = useContext(AuthContext);
+
+  // ── Ajout pour la connexion automatique post-inscription ─────────
+  const { mergeGuestCartOnLogin } = useContext(CartContext);
 
   // États du formulaire
   const [formData, setFormData] = useState({
@@ -61,7 +65,7 @@ const Register = () => {
         errorType = "duplicate_user";
         isCritical = false; // Erreur utilisateur normale
         toast.error(
-          "Cet email est déjà utilisé. Veuillez vous connecter ou utiliser un autre email."
+          "Cet email est déjà utilisé. Veuillez vous connecter ou utiliser un autre email.",
         );
       } else if (error.includes("validation")) {
         errorType = "validation_error";
@@ -88,7 +92,7 @@ const Register = () => {
             hasPhone: !!formData.phone,
             emailDomain: formData.email ? formData.email.split("@")[1] : null,
           },
-        }
+        },
       );
 
       clearErrors();
@@ -114,7 +118,7 @@ const Register = () => {
           error,
           "Register",
           "passwordStrengthCalculation",
-          false
+          false,
         );
       }
     }
@@ -151,10 +155,8 @@ const Register = () => {
     e.preventDefault();
 
     if (isOffline) {
-      const offlineError = new Error("Tentative inscription hors ligne");
-      captureClientError(offlineError, "Register", "submit", false);
       toast.warning(
-        "Vous semblez être hors ligne. Veuillez vérifier votre connexion internet."
+        "Vous semblez être hors ligne. Veuillez vérifier votre connexion internet.",
       );
       return;
     }
@@ -162,82 +164,33 @@ const Register = () => {
     setIsSubmitting(true);
 
     try {
-      // Validation côté client basique
       if (
         !formData.name ||
         !formData.email ||
         !formData.password ||
         !formData.phone
       ) {
-        const validationError = new Error("Champs obligatoires manquants");
-        captureClientError(
-          validationError,
-          "Register",
-          "clientValidation",
-          false,
-          {
-            missingFields: {
-              name: !formData.name,
-              email: !formData.email,
-              password: !formData.password,
-              phone: !formData.phone,
-            },
-          }
-        );
         toast.error("Tous les champs sont obligatoires");
         setIsSubmitting(false);
         return;
       }
 
-      // Appel direct à l'API
+      // 1. Inscription
       const response = await fetch("/api/auth/register", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });
 
       const data = await response.json();
 
-      if (response.ok && data.success) {
-        // ✅ SUCCÈS: Inscription réussie
-        setRegistrationSuccess(true);
-        setRegistrationData(data.data);
-
-        // Réinitialiser le formulaire
-        setFormData({
-          name: "",
-          phone: "",
-          email: "",
-          password: "",
-        });
-        setPasswordStrength(0);
-
-        // Toast de succès
-        toast.success(data.message || "Inscription réussie !");
-
-        // Log pour développement
-        if (process.env.NODE_ENV === "development") {
-          console.log("Registration successful:", {
-            user: data.data?.user?.email,
-          });
-        }
-      } else {
-        // ✅ ERREUR: Gestion des erreurs spécifiques avec monitoring
-        let errorType = "generic";
-        let isCritical = false;
-
+      if (!response.ok || !data.success) {
         switch (data.code) {
           case "DUPLICATE_EMAIL":
           case "DUPLICATE_TELEPHONE":
-            errorType = "duplicate_data";
-            isCritical = false;
             toast.error(data.message);
             break;
           case "VALIDATION_FAILED":
-            errorType = "validation_failed";
-            isCritical = false;
             if (data.errors) {
               setErrors(data.errors);
               toast.error("Veuillez corriger les erreurs dans le formulaire");
@@ -246,61 +199,42 @@ const Register = () => {
             }
             break;
           case "RATE_LIMITED":
-            errorType = "rate_limited";
-            isCritical = true; // Peut indiquer une attaque
             toast.error("Trop de tentatives. Veuillez réessayer plus tard.");
             break;
           default:
-            errorType = "server_error";
-            isCritical = true;
             toast.error(data.message || "Erreur lors de l'inscription");
         }
-
-        // Monitoring avec contexte riche
-        captureClientError(
-          new Error(`Échec inscription: ${errorType}`),
-          "Register",
-          "registrationFailure",
-          isCritical,
-          {
-            errorType,
-            statusCode: response.status,
-            originalError: data.message,
-            errorCode: data.code,
-            hasValidationErrors: !!data.errors,
-            formData: {
-              emailDomain: formData.email ? formData.email.split("@")[1] : null,
-              passwordStrength: passwordStrength,
-              nameLength: formData.name ? formData.name.length : 0,
-            },
-          }
-        );
-      }
-    } catch (error) {
-      // Monitoring : Erreurs techniques
-      let isCritical = true;
-      let errorType = "unknown";
-
-      if (error.name === "AbortError") {
-        errorType = "timeout";
-        isCritical = false;
-      } else if (
-        error.name === "TypeError" &&
-        error.message.includes("fetch")
-      ) {
-        errorType = "network_error";
-        isCritical = true;
-      } else if (error instanceof SyntaxError) {
-        errorType = "json_parse_error";
-        isCritical = true;
+        return;
       }
 
-      captureClientError(error, "Register", "technicalError", isCritical, {
-        errorType,
-        errorName: error.name,
-        errorMessage: error.message,
+      // 2. Inscription réussie → connexion automatique
+      toast.success("Inscription réussie ! Connexion en cours…");
+
+      const signInResult = await signIn("credentials", {
+        email: formData.email,
+        password: formData.password,
+        redirect: false,
       });
 
+      if (signInResult?.error) {
+        // Inscription OK mais connexion auto échouée : on redirige vers /login
+        console.warn("[Register] Auto-login failed:", signInResult.error);
+        toast.info("Inscription réussie. Veuillez vous connecter.");
+        setTimeout(() => router.push("/login"), 1000);
+        return;
+      }
+
+      // 3. Connexion réussie → fusion du panier guest si besoin
+      try {
+        await mergeGuestCartOnLogin();
+      } catch (mergeError) {
+        console.warn("[Register] Guest cart merge failed:", mergeError.message);
+      }
+
+      // 4. Redirection vers l'accueil
+      router.refresh();
+      setTimeout(() => router.push("/"), 1000);
+    } catch (error) {
       console.error("Registration error:", error);
       toast.error("Une erreur est survenue. Veuillez réessayer.");
     } finally {
