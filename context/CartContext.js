@@ -558,6 +558,7 @@ export const CartProvider = ({ children }) => {
       cartTotal: isAuthenticated ? cartTotal : guestCartTotal,
       error,
       isAuthenticated,
+      sessionStatus, // ← ajout
       setCartToState,
       addItemToCart,
       updateCart,
@@ -577,6 +578,7 @@ export const CartProvider = ({ children }) => {
       guestCartTotal,
       error,
       isAuthenticated,
+      sessionStatus,
       setCartToState,
       addItemToCart,
       updateCart,

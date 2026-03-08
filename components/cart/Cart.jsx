@@ -55,7 +55,7 @@ const Cart = () => {
     error,
     clearError,
     isAuthenticated,
-    enrichGuestCart,
+    sessionStatus,
   } = useContext(CartContext);
 
   const [initialLoadComplete, setInitialLoadComplete] = useState(false);
@@ -74,56 +74,75 @@ const Cart = () => {
   const isLoadingCart = useRef(false);
 
   useEffect(() => {
-    // Nettoyage de l'erreur si elle existe
     if (error) {
       clearError();
       toast.error("Une erreur est survenue lors du chargement du panier.");
     }
   }, [error, clearError]);
 
-  // Précharger la page de livraison
   useEffect(() => {
     router.prefetch("/shipping-choice");
+  }, [router]);
+
+  // Précharger la page de livraison
+  useEffect(() => {
+    // ── FIX : attendre que NextAuth ait terminé sa vérification.
+    // Pendant "loading", isAuthenticated est false — sans ce guard,
+    // on déclencherait enrichGuestCart() pour un utilisateur connecté,
+    // et initialLoadComplete passerait à true avant le chargement BDD.
+    if (sessionStatus === "loading") return;
+
+    // Non authentifié : rien à charger depuis la BDD,
+    // afficher directement le message de connexion
+    if (!isAuthenticated) {
+      setInitialLoadComplete(true);
+      return;
+    }
+
+    // Authentifié : charger le panier BDD une seule fois
+    if (initialLoadComplete || isLoadingCart.current) return;
+
     let isMounted = true; // Ajouter un flag de montage
 
     const loadCart = async () => {
-      if (isLoadingCart.current || !isMounted) return; // Vérifier isMounted
-
+      isLoadingCart.current = true;
       try {
-        isLoadingCart.current = true;
-
-        if (isAuthenticated) {
-          // Utilisateur connecté : charger depuis la BDD (comportement original)
-          await setCartToState();
-        } else {
-          // Utilisateur guest : enrichir le localStorage avec les données produits
-          await enrichGuestCart();
-        }
-      } catch (error) {
-        console.error("Erreur lors du chargement du panier:", error);
-        // ❌ SUPPRIMÉ : Plus de captureException ici (géré par CartContext)
+        await setCartToState();
+      } catch (err) {
+        console.error("Erreur lors du chargement du panier:", err);
         toast.error("Impossible de charger votre panier. Veuillez réessayer.");
       } finally {
         if (isMounted) {
-          // Vérifier avant de mettre à jour l'état
           isLoadingCart.current = false;
           setInitialLoadComplete(true);
         }
       }
     };
 
-    if (!initialLoadComplete && !isLoadingCart.current) {
-      loadCart();
-    }
+    loadCart();
 
     return () => {
-      isMounted = false; // Cleanup
+      isMounted = false;
     };
-  }, [setCartToState, initialLoadComplete]);
+  }, [sessionStatus, isAuthenticated, initialLoadComplete, setCartToState]);
 
-  // Afficher un écran de chargement pendant le chargement initial
-  if (!initialLoadComplete) {
+  // Skeleton pendant la vérification NextAuth ou le chargement BDD
+  if (sessionStatus === "loading" || !initialLoadComplete) {
     return <CartSkeleton />;
+  }
+
+  // Non authentifié : message de connexion
+  if (!isAuthenticated) {
+    return (
+      <>
+        <CartHeader cartCount={0} />
+        <section className="py-8 md:py-10">
+          <div className="container max-w-6xl mx-auto px-4">
+            <GuestCartMessage />
+          </div>
+        </section>
+      </>
+    );
   }
 
   return (
